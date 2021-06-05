@@ -15,7 +15,7 @@ GSS = pygame.image.load(os.path.join('assets', 'green_ship.png'))
 BSS = pygame.image.load(os.path.join('assets', 'blue_ship.png'))
 
 # Player
-YSS = pygame.image.load(os.path.join('assets', 'yellow_ship.png'))
+PSS = pygame.image.load(os.path.join('assets', 'player_ship.png'))
 
 # Lasers
 RL = pygame.image.load(os.path.join('assets', 'laser_red.png'))
@@ -64,14 +64,14 @@ class Ship:
         for laser in self.lasers:
             laser.draw(window)
 
-    def move_lasers(self, vel, obj):
+    def move_lasers(self, vel, obj, dmg):
         self.cooldown()
         for laser in self.lasers:
             laser.move(vel)
             if laser.off_screen(HEIGHT):
                 self.lasers.remove(laser)
             elif laser.collision(obj):
-                obj.health -= 10
+                obj.health -= dmg
                 self.lasers.remove(laser)
 
     def cooldown(self):
@@ -82,7 +82,7 @@ class Ship:
 
     def shoot(self):
         if self.cool_down_counter == 0:
-            laser = Laser(self.x, self.y, self.laser_img)
+            laser = Laser(self.x - 26, self.y - 40, self.laser_img)
             self.lasers.append(laser)
             self.cool_down_counter = 1
 
@@ -96,7 +96,7 @@ class Ship:
 class Player(Ship):
     def __init__(self, x, y, health=100):
         super().__init__(x, y, health)
-        self.ship_img = YSS
+        self.ship_img = PSS
         self.laser_img = YL
         self.mask = pygame.mask.from_surface(self.ship_img)
         self.max_health = health
@@ -128,14 +128,14 @@ class Player(Ship):
 
 class Enemy(Ship):
     COLOR_MAP = {
-        "red": (RSS, RL),
-        "green": (GSS, GL),
-        "blue": (BSS, BL)
+        "red": (RSS, RL, 14),
+        "green": (GSS, GL, 6),
+        "blue": (BSS, BL, 2)
     }
 
     def __init__(self, x, y, color, health=100):
         super().__init__(x, y, health)
-        self.ship_img, self.laser_img = self.COLOR_MAP[color]
+        self.ship_img, self.laser_img, self.laser_dmg = self.COLOR_MAP[color]
         self.mask = pygame.mask.from_surface(self.ship_img)
 
     def move(self, vel):
@@ -143,7 +143,7 @@ class Enemy(Ship):
 
     def shoot(self):
         if self.cool_down_counter == 0:
-            laser = Laser(self.x - 15, self.y, self.laser_img)
+            laser = Laser(self.x - 20, self.y, self.laser_img)
             self.lasers.append(laser)
             self.cool_down_counter = 1
 
@@ -238,7 +238,7 @@ def main():
 
         for enemy in enemies[:]:
             enemy.move(enemy_vel)
-            enemy.move_lasers(laser_vel, player)
+            enemy.move_lasers(laser_vel, player, enemy.laser_dmg)
 
             if random.randrange(0, 2 * 60) == 1:
                 enemy.shoot()
